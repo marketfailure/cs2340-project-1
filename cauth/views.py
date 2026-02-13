@@ -13,7 +13,7 @@ def register(request: WSGIHandler):
     if request.method == 'POST':
         fform = forms.RegisterForm(request.POST)
         if not fform.is_valid():
-            return render(request, 'error.html', err_dict | {'type': 'Form is invalid'})
+            return render(request, 'error.html', err_dict | {'error': 'Form is invalid'})
 
         password = fform['password'].value()
         if password != fform['password_repeat'].value():
@@ -26,7 +26,7 @@ def register(request: WSGIHandler):
 
         user = User.objects.create_user(username=username, email=fform['mail'].value(), password=password)
         login(request, user)
-        return HttpResponseRedirect(SUCCESS_URL)
+        return HttpResponseRedirect('profiles/edit/me/')
     return render(request, 'register/index.html', {'form' : forms.RegisterForm})
 
 def loginpage(request: WSGIHandler):
