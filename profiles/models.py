@@ -14,6 +14,13 @@ class Profile(models.Model):
     last_name = models.CharField(max_length=128)
     bio = models.TextField()
 
+    hide_name_from_recruiters = models.BooleanField(default=False)
+    hide_bio_from_recruiters = models.BooleanField(default=False)
+    hide_skills_from_recruiters = models.BooleanField(default=False)
+    hide_education_from_recruiters = models.BooleanField(default=False)
+    hide_work_from_recruiters = models.BooleanField(default=False)
+    hide_links_from_recruiters = models.BooleanField(default=False)
+
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
 
     @property

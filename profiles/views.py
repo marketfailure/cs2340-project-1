@@ -24,7 +24,32 @@ def profile_view(request, username: str):
     except User.DoesNotExist:
         raise Http404('User not found')
 
-    return render(request, 'view.html', {'puser': user})
+    viewer_is_owner = request.user.is_authenticated and request.user.username == user.username
+    viewer_is_recruiter = (
+        request.user.is_authenticated and
+        request.user.groups.filter(name="recruiters").exists()
+    )
+
+    p = user.profile
+
+    can_show_name = viewer_is_owner or (not viewer_is_recruiter or not p.hide_name_from_recruiters)
+    can_show_bio = viewer_is_owner or (not viewer_is_recruiter or not p.hide_bio_from_recruiters)
+    can_show_skills = viewer_is_owner or (not viewer_is_recruiter or not p.hide_skills_from_recruiters)
+    can_show_education = viewer_is_owner or (not viewer_is_recruiter or not p.hide_education_from_recruiters)
+    can_show_work = viewer_is_owner or (not viewer_is_recruiter or not p.hide_work_from_recruiters)
+    can_show_links = viewer_is_owner or (not viewer_is_recruiter or not p.hide_links_from_recruiters)
+
+    return render(request, 'view.html', {
+        'puser': user,
+        'viewer_is_owner': viewer_is_owner,
+        'viewer_is_recruiter': viewer_is_recruiter,
+        'can_show_name': can_show_name,
+        'can_show_bio': can_show_bio,
+        'can_show_skills': can_show_skills,
+        'can_show_education': can_show_education,
+        'can_show_work': can_show_work,
+        'can_show_links': can_show_links,
+    })
 
 
 @login_required

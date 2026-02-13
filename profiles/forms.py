@@ -4,7 +4,18 @@ from .models import Profile, Skill, Education, WorkExperience, AboutLink
 class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['first_name', 'last_name', 'bio', 'avatar']
+        fields = [
+            'first_name',
+            'last_name',
+            'bio',
+            'avatar',
+            'hide_name_from_recruiters',
+            'hide_bio_from_recruiters',
+            'hide_skills_from_recruiters',
+            'hide_education_from_recruiters',
+            'hide_work_from_recruiters',
+            'hide_links_from_recruiters',
+        ]
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 5}),
         }
