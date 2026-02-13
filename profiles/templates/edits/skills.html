@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}Edit Skills{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body">
+      <h3 class="mb-3">Skills</h3>
+
+      <form method="post" class="mb-3">
+        {% csrf_token %}
+        {{ form|bootstrap }}
+        <button class="btn btn-primary mt-2" type="submit">Add skill</button>
+        <a class="btn btn-secondary mt-2" href="{% url 'profile_edit' %}">Back</a>
+      </form>
+
+      <hr class="border-secondary">
+
+      {% for s in skills %}
+        <div class="d-flex justify-content-between align-items-center py-1">
+          <div>{{ s.name }}</div>
+          <form method="post" action="{% url 'skill_delete' s.id %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+          </form>
+        </div>
+      {% empty %}
+        <div class="text-secondary">No skills yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

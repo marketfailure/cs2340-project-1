@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}Edit Education{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body">
+      <h3 class="mb-3">Education</h3>
+
+      <form method="post" class="mb-3">
+        {% csrf_token %}
+        {{ form|bootstrap }}
+        <button class="btn btn-primary mt-2" type="submit">Add education</button>
+        <a class="btn btn-secondary mt-2" href="{% url 'profile_edit' %}">Back</a>
+      </form>
+
+      <hr class="border-secondary">
+
+      {% for e in education %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">{{ e.school }}</div>
+              <div class="text-secondary">
+                {{ e.degree }}{% if e.field_of_study %} — {{ e.field_of_study }}{% endif %}
+                {% if e.start_year or e.end_year %}
+                  • {{ e.start_year|default:"" }}{% if e.end_year %}–{{ e.end_year }}{% endif %}
+                {% endif %}
+              </div>
+            </div>
+            <form method="post" action="{% url 'education_delete' e.id %}">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-secondary">No education yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

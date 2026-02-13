@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}Edit Work Experience{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body">
+      <h3 class="mb-3">Work Experience</h3>
+
+      <form method="post" class="mb-3">
+        {% csrf_token %}
+        {{ form|bootstrap }}
+        <button class="btn btn-primary mt-2" type="submit">Add work</button>
+        <a class="btn btn-secondary mt-2" href="{% url 'profile_edit' %}">Back</a>
+      </form>
+
+      <hr class="border-secondary">
+
+      {% for w in work %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold">{{ w.title }}</div>
+              <div class="text-secondary">
+                {{ w.company }}{% if w.location %} • {{ w.location }}{% endif %}
+              </div>
+              <div class="text-secondary">
+                {% if w.start_date %}{{ w.start_date }}{% endif %}
+                {% if w.is_current %} – Present
+                {% elif w.end_date %} – {{ w.end_date }}
+                {% endif %}
+              </div>
+              {% if w.description %}
+                <div class="mt-1">{{ w.description }}</div>
+              {% endif %}
+            </div>
+            <form method="post" action="{% url 'work_delete' w.id %}">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-secondary">No work experience yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

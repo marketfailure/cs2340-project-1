@@ -2,28 +2,139 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.shortcuts import render, redirect
+from django.views.decorators.http import require_POST
 
-from .forms import ProfileEditForm
+from .forms import ProfileEditForm, SkillForm, EducationForm, WorkExperienceForm, AboutLinkForm
+from .models import Skill, Education, WorkExperience, AboutLink
 
 def profile_view(request, username: str):
     User = get_user_model()
     try:
-        user = User.objects.select_related('profile').get(username=username)
+        user = (
+            User.objects
+            .select_related('profile')
+            .prefetch_related(
+                'profile__skills',
+                'profile__education',
+                'profile__work_experience',
+                'profile__links',
+            )
+            .get(username=username)
+        )
     except User.DoesNotExist:
         raise Http404('User not found')
 
     return render(request, 'view.html', {'puser': user})
 
+
 @login_required
 def profile_edit_me(request):
     profile = request.user.profile
-
     if request.method == 'POST':
         form = ProfileEditForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
             return redirect('profile_view', username=request.user.username)
         return render(request, 'edit.html', {'form': form})
-
     form = ProfileEditForm(instance=profile)
     return render(request, 'edit.html', {'form': form})
+
+
+@login_required
+def skills_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = SkillForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.profile = profile
+            obj.save()
+            return redirect("skills_edit")
+    else:
+        form = SkillForm()
+
+    skills = profile.skills.all().order_by("name")
+    return render(request, "edits/skills.html", {"form": form, "skills": skills})
+
+
+@login_required
+@require_POST
+def skill_delete(request, skill_id: int):
+    profile = request.user.profile
+    Skill.objects.filter(id=skill_id, profile=profile).delete()
+    return redirect("skills_edit")
+
+
+@login_required
+def education_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = EducationForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.profile = profile
+            obj.save()
+            return redirect("education_edit")
+    else:
+        form = EducationForm()
+
+    education = profile.education.all().order_by("-end_year", "-start_year", "school")
+    return render(request, "edits/education.html", {"form": form, "education": education})
+
+
+@login_required
+@require_POST
+def education_delete(request, edu_id: int):
+    profile = request.user.profile
+    Education.objects.filter(id=edu_id, profile=profile).delete()
+    return redirect("education_edit")
+
+
+@login_required
+def work_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = WorkExperienceForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.profile = profile
+            obj.save()
+            return redirect("work_edit")
+    else:
+        form = WorkExperienceForm()
+
+    work = profile.work_experience.all().order_by("-is_current", "-end_date", "-start_date", "-id")
+    return render(request, "edits/work.html", {"form": form, "work": work})
+
+
+@login_required
+@require_POST
+def work_delete(request, work_id: int):
+    profile = request.user.profile
+    WorkExperience.objects.filter(id=work_id, profile=profile).delete()
+    return redirect("work_edit")
+
+
+@login_required
+def links_edit(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = AboutLinkForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.profile = profile
+            obj.save()
+            return redirect("links_edit")
+    else:
+        form = AboutLinkForm()
+
+    links = profile.links.all().order_by("label")
+    return render(request, "edits/links.html", {"form": form, "links": links})
+
+
+@login_required
+@require_POST
+def link_delete(request, link_id: int):
+    profile = request.user.profile
+    AboutLink.objects.filter(id=link_id, profile=profile).delete()
+    return redirect("links_edit")

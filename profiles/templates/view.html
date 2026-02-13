@@ -2,42 +2,131 @@
 {% load static %}
 
 {% block navbar %}
-    {% include "userbar.html" %}
+  {% include "userbar.html" %}
 {% endblock %}
 
 {% block title %}Profile{% endblock %}
 
 {% block content %}
 <div class="container py-4 mb-5">
-    <div class="card bg-dark text-white">
-        <div class="card-body d-flex gap-4 align-items-start">
-            <div style="width: 128px;">
-                {% if puser.profile.avatar %}
-                    <img src="{{ puser.profile.avatar.url }}" class="img-fluid rounded" alt="avatar">
-                {% else %}
-                    <img src="{% static 'images/default-avatar.png' %}" class="img-fluid rounded" alt="avatar">
-                {% endif %}
-            </div>
+  <div class="card bg-dark text-white">
+    <div class="card-body">
 
-            <div class="flex-grow-1">
-                <h2 class="mb-1">
-                    {% if puser.profile.full_name %}{{ puser.profile.full_name }}{% else %}{{ puser.username }}{% endif %}
-                </h2>
-                <div class="text-secondary mb-3">@{{ puser.username }}</div>
-
-                {% if puser.profile.bio %}
-                    <p class="mb-0">{{ puser.profile.bio }}</p>
-                {% else %}
-                    <p class="text-secondary mb-0">No bio yet.</p>
-                {% endif %}
-
-                {% if request.user.is_authenticated and request.user.username == puser.username %}
-                    <div class="mt-3">
-                        <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
-                    </div>
-                {% endif %}
-            </div>
+      <!-- Header row -->
+      <div class="d-flex gap-4 align-items-start">
+        <div style="width: 128px;">
+          {% if puser.profile.avatar %}
+            <img src="{{ puser.profile.avatar.url }}" class="img-fluid rounded" alt="avatar">
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" class="img-fluid rounded" alt="avatar">
+          {% endif %}
         </div>
+
+        <div class="flex-grow-1">
+          <h2 class="mb-1">
+            {% if puser.profile.full_name %}
+              {{ puser.profile.full_name }}
+            {% else %}
+              {{ puser.username }}
+            {% endif %}
+          </h2>
+
+          <div class="text-secondary mb-3">@{{ puser.username }}</div>
+
+          {% if puser.profile.bio %}
+            <p class="mb-0">{{ puser.profile.bio }}</p>
+          {% else %}
+            <p class="text-secondary mb-0">No bio yet.</p>
+          {% endif %}
+
+          {% if request.user.is_authenticated and request.user.username == puser.username %}
+            <div class="mt-3 d-flex flex-wrap gap-2">
+              <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
+              <a class="btn btn-outline-light" href="{% url 'skills_edit' %}">Skills</a>
+              <a class="btn btn-outline-light" href="{% url 'education_edit' %}">Education</a>
+              <a class="btn btn-outline-light" href="{% url 'work_edit' %}">Work</a>
+              <a class="btn btn-outline-light" href="{% url 'links_edit' %}">Links</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <hr class="border-secondary my-4 border-3">
+
+      <!-- Sections -->
+      <div class="row g-4">
+        <div class="col-12">
+          <h4 class="mb-2">Skills</h4>
+          <div class="d-flex flex-wrap gap-2">
+            {% for s in puser.profile.skills.all %}
+              <span class="badge bg-secondary">{{ s.name }}</span>
+            {% empty %}
+              <span class="text-secondary">No skills yet.</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="col-12">
+          <h4 class="mb-2">Education</h4>
+          {% for e in puser.profile.education.all %}
+            <div class="mb-3">
+              <div class="fw-bold">{{ e.school }}</div>
+              <div class="text-secondary">
+                {% if e.degree %}{{ e.degree }}{% endif %}
+                {% if e.field_of_study %}
+                  {% if e.degree %} — {% endif %}{{ e.field_of_study }}
+                {% endif %}
+                {% if e.start_year or e.end_year %}
+                  • {{ e.start_year|default:"" }}{% if e.end_year %}–{{ e.end_year }}{% endif %}
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-secondary mb-0">No education yet.</p>
+          {% endfor %}
+        </div>
+
+        <div class="col-12">
+          <h4 class="mb-2">Work Experience</h4>
+          {% for w in puser.profile.work_experience.all %}
+            <div class="mb-4">
+              <div class="fw-bold">{{ w.title }}</div>
+              <div class="text-secondary">
+                {{ w.company }}{% if w.location %} • {{ w.location }}{% endif %}
+              </div>
+              <div class="text-secondary">
+                {% if w.start_date %}{{ w.start_date }}{% endif %}
+                {% if w.is_current %}
+                  – Present
+                {% elif w.end_date %}
+                  – {{ w.end_date }}
+                {% endif %}
+              </div>
+              {% if w.description %}
+                <div class="mt-1">{{ w.description }}</div>
+              {% endif %}
+            </div>
+          {% empty %}
+            <p class="text-secondary mb-0">No work experience yet.</p>
+          {% endfor %}
+        </div>
+
+        <div class="col-12">
+          <h4 class="mb-2">Links</h4>
+          {% for l in puser.profile.links.all %}
+            <div class="mb-2">
+              <a class="link-light" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">
+                {{ l.label }}
+              </a>
+              <span class="text-secondary">— {{ l.url }}</span>
+            </div>
+          {% empty %}
+            <p class="text-secondary mb-0">No links yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
     </div>
+  </div>
 </div>
 {% endblock %}
