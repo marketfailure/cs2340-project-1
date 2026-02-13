@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% load bootstrap %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column min-vh-100 min-vw-100">
+    <div class="container d-flex flex-column align-items-center justify-content-center flex-grow-1">
+        <div class="p-2">
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="mb-3 mt-3 p-3 bg-dark rounded">
+                    <div class="text-center">
+                        {{ form|bootstrap }}
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary text-center m-3 w-75">Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

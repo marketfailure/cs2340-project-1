@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+    {% include "regbar.html" %}
+{% endblock %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column min-vh-100 min-vw-100">
+    <div class="container d-flex flex-column align-items-center justify-content-center flex-grow-1">
+        <div class="p-2">
+            <h1>Error during {{ action }}!</h1>
+        </div>
+        <div class="p-2">
+            <p>{{ error }}!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
