@@ -1,0 +1,7 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('<str:username>/', views.profile_view, name='profile_view'),
+    path('edit/me/', views.profile_edit_me, name='profile_edit'),
+]

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block navbar %}
+    {% include "userbar.html" %}
+{% endblock %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+    <div class="card bg-dark text-white">
+        <div class="card-body d-flex gap-4 align-items-start">
+            <div style="width: 128px;">
+                {% if puser.profile.avatar %}
+                    <img src="{{ puser.profile.avatar.url }}" class="img-fluid rounded" alt="avatar">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" class="img-fluid rounded" alt="avatar">
+                {% endif %}
+            </div>
+
+            <div class="flex-grow-1">
+                <h2 class="mb-1">
+                    {% if puser.profile.full_name %}{{ puser.profile.full_name }}{% else %}{{ puser.username }}{% endif %}
+                </h2>
+                <div class="text-secondary mb-3">@{{ puser.username }}</div>
+
+                {% if puser.profile.bio %}
+                    <p class="mb-0">{{ puser.profile.bio }}</p>
+                {% else %}
+                    <p class="text-secondary mb-0">No bio yet.</p>
+                {% endif %}
+
+                {% if request.user.is_authenticated and request.user.username == puser.username %}
+                    <div class="mt-3">
+                        <a class="btn btn-primary" href="{% url 'profile_edit' %}">Edit profile</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
