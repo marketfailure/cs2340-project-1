@@ -26,6 +26,7 @@ rules:
       - core
       - auth
       - profile
+      - assets
   subject-empty:
     level: error
   type:
