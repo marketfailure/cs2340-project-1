@@ -19,12 +19,12 @@ def register(request: WSGIHandler):
         if password != fform['password_repeat'].value():
             return render(request, 'error.html', err_dict | {'error': 'Password does not match repeated password'})
 
-        username = fform['username'].value()
+        mail = fform['mail'].value()
         User = get_user_model()
-        if User.objects.filter(username=username).exists():
+        if User.objects.filter(email=mail).exists():
             return render(request, 'error.html', err_dict | {'error': 'Username exists'})
 
-        user = User.objects.create_user(username=username, email=fform['mail'].value(), password=password)
+        user = User.objects.create_user(username=mail, email=mail, password=password)
         login(request, user)
         return HttpResponseRedirect('profiles/edit/me/')
     return render(request, 'register/index.html', {'form' : forms.RegisterForm})
@@ -36,7 +36,7 @@ def loginpage(request: WSGIHandler):
         if not fform.is_valid():
             return render(request, 'error.html', err_dict | {'error': 'Form is invalid'})
 
-        user = authenticate(request, username=fform['username'].value(), password=fform['password'].value())
+        user = authenticate(request, email=fform['mail'].value(), password=fform['password'].value())
         if user is None:
             return render(request, 'error.html', err_dict | {'error': 'Form is invalid'})
         login(request, user)
