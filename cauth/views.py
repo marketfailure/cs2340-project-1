@@ -26,7 +26,7 @@ def register(request: WSGIHandler):
 
         user = User.objects.create_user(username=mail, email=mail, password=password)
         login(request, user)
-        return HttpResponseRedirect('profiles/edit/me/')
+        return HttpResponseRedirect('/profiles/edit/me/')
     return render(request, 'register/index.html', {'form' : forms.RegisterForm})
 
 def loginpage(request: WSGIHandler):
