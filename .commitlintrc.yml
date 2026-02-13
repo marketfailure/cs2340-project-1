@@ -25,6 +25,7 @@ rules:
       - tools
       - core
       - auth
+      - profile
   subject-empty:
     level: error
   type:
