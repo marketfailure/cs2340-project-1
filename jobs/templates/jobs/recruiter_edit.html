@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}Recruiter Job{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white">
+    <div class="card-body">
+      <h3 class="mb-3">{% if job %}Edit Job{% else %}New Job{% endif %}</h3>
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form|bootstrap }}
+        <button class="btn btn-primary" type="submit">Save</button>
+        {% if job %}
+          <a class="btn btn-outline-light" href="{% url 'recruiter_pipeline' job.id %}">Pipeline</a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

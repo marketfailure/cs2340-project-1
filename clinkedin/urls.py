@@ -26,7 +26,8 @@ from django.shortcuts import render
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('cauth/', include('cauth.urls')),
-    path('profiles/', include('profiles.urls'))
+    path('profiles/', include('profiles.urls')),
+    path('jobs/', include('jobs.urls'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

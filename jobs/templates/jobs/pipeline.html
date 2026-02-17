@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}Pipeline{% endblock %}
+
+{% block content %}
+<!--Written by ChatGPT till EOF-->
+
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body">
+      <h3 class="mb-1">Pipeline — {{ job.title }}</h3>
+      <a class="btn btn-secondary mt-2" href="{% url 'recruiter_job_edit' job.id %}">Back to Job</a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    {% for status, items in buckets.items %}
+      <div class="col-md-3">
+        <div class="card bg-dark text-white h-100">
+          <div class="card-body">
+            <div class="fw-bold mb-2">{{ status }}</div>
+
+            {% for a in items %}
+              <div class="border border-secondary rounded p-2 mb-2">
+                <div class="fw-bold">{{ a.applicant.username }}</div>
+
+                <form method="post" action="{% url 'recruiter_set_status' a.id %}">
+                  {% csrf_token %}
+                  <select name="status" class="form-select form-select-sm mt-2">
+                    {% for k,v in a.Status.choices %}
+                      <option value="{{ k }}" {% if a.status == k %}selected{% endif %}>{{ v }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-sm btn-primary mt-2" type="submit">Move</button>
+                </form>
+              </div>
+            {% empty %}
+              <div class="text-secondary">No applicants.</div>
+            {% endfor %}
+
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

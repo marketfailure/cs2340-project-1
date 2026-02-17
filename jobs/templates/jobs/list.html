@@ -1,0 +1,55 @@
+{% extends "base.html" %} 
+
+{% load bootstrap %} 
+{% block navbar %}
+{% include "userbar.html" %}
+{% endblock %}
+{% block title %}Jobs{% endblock %} 
+
+{% block content %}
+
+<!-- Written by ChatGPT $$ - EOF -->
+
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body">
+      <h3 class="mb-3">Job Search</h3>
+      <form method="get">
+        {{ form|bootstrap }}
+        <button class="btn btn-primary" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+
+  {% for j in jobs %}
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between">
+        <div>
+          <h5 class="mb-1">
+            <a class="link-light" href="{% url 'job_detail' j.id %}"
+              >{{ j.title }}</a
+            >
+          </h5>
+          <div class="text-secondary">
+            {{ j.company_name|default:"" }} • {{ j.location_text|default:"" }}
+          </div>
+          <div class="text-secondary">
+            {{ j.remote_type }} • Visa: {{ j.visa_sponsorship }}
+          </div>
+        </div>
+        <div class="text-secondary">{{ j.created_at }}</div>
+      </div>
+
+      <div class="mt-2">
+        {% for s in j.skills.all %}
+        <span class="badge bg-secondary">{{ s.name }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-secondary">No jobs found.</div>
+  {% endfor %}
+</div>
+{% endblock %}

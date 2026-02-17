@@ -1,3 +1,5 @@
+{% load jobs_extras %}
+
 <nav class="navbar navbar-expand-lg bg-secondary">
   <div class="container-fluid">
     <a class="navbar-brand text-white" href="/">GT LinkedIn</a>
@@ -6,13 +8,31 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active text-white" aria-current="page" href="/">Home</a>
-       </li>
-        <li class="nav-item">
-          <a class="nav-link active text-white" aria-current="page" href="/cauth/logout">Logout</a>
-        </li>
-      </ul>
-    </div>
+  <li class="nav-item">
+    <a class="nav-link active text-white" href="/">Home</a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link active text-white" href="{% url 'job_list' %}">Jobs</a>
+  </li>
+
+  {% if request.user.is_authenticated %}
+    {% user_is_recruiter request.user as is_rec %}
+
+    {% if is_rec %}
+      <li class="nav-item">
+        <a class="nav-link active text-white" href="{% url 'recruiter_jobs' %}">Recruiter</a>
+      </li>
+    {% else %}
+      <li class="nav-item">
+        <a class="nav-link active text-white" href="{% url 'my_applications' %}">My Applications</a>
+      </li>
+    {% endif %}
+  {% endif %}
+
+  <li class="nav-item">
+    <a class="nav-link active text-white" href="/cauth/logout">Logout</a>
+  </li>
+</ul>    </div>
   </div>
 </nav>

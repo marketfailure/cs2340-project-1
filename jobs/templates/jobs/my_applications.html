@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white">
+    <div class="card-body">
+      <h3 class="mb-3">My Applications</h3>
+
+      {% for a in apps %}
+        <div class="mb-3">
+          <div class="fw-bold"><a class="link-light" href="{% url 'job_detail' a.job.id %}">{{ a.job.title }}</a></div>
+          <div class="text-secondary">{{ a.job.company_name|default:"" }} • Status: {{ a.status }}</div>
+          <div class="text-secondary">Applied: {{ a.created_at }}</div>
+        </div>
+      {% empty %}
+        <div class="text-secondary">No applications yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

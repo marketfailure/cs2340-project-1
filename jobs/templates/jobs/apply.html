@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}Apply{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white">
+    <div class="card-body">
+      <h3 class="mb-3">Apply — {{ job.title }}</h3>
+      <form method="post">
+        {% csrf_token %}
+        {{ form|bootstrap }}
+        <button class="btn btn-primary" type="submit">Submit Application</button>
+        <a class="btn btn-secondary" href="{% url 'job_detail' job.id %}">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

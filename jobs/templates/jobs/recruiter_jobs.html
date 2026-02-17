@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block navbar %}{% include "userbar.html" %}{% endblock %}
+{% block title %}My Job Posts{% endblock %}
+
+{% block content %}
+<div class="container py-4 mb-5">
+  <div class="card bg-dark text-white mb-3">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">My Job Posts</h3>
+      <a class="btn btn-primary" href="{% url 'recruiter_job_new' %}">New Job</a>
+    </div>
+  </div>
+
+  {% for j in jobs %}
+    <div class="card bg-dark text-white mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <!-- Written by ChatGPT next 5 lines -->
+            <div class="fw-bold">{{ j.title }}</div>
+            <div class="text-secondary">
+              {{ j.company_name|default:"" }} • {{ j.remote_type }} • Active: {{ j.is_active }}
+            </div>
+            <div class="text-secondary">Updated: {{ j.updated_at }}</div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <a class="btn btn-outline-light" href="{% url 'recruiter_job_edit' j.id %}">Edit</a>
+            <a class="btn btn-outline-light" href="{% url 'recruiter_pipeline' j.id %}">Pipeline</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="text-secondary">No job posts yet.</div>
+  {% endfor %}
+</div>
+{% endblock %}
