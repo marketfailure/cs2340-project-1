@@ -27,6 +27,7 @@ rules:
       - auth
       - profile
       - assets
+      - job
   subject-empty:
     level: error
   type:
