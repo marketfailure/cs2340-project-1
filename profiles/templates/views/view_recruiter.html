@@ -34,6 +34,10 @@
 
           <div class="text-secondary mb-3">@{{ puser.username }}</div>
 
+          {% if puser.profile.headline %}
+            <div class="text-secondary mb-2">{{ puser.profile.headline }}</div>
+          {% endif %}
+
           {% if puser.profile.bio %}
             <p class="mb-0">{{ puser.profile.bio }}</p>
           {% else %}

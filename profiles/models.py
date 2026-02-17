@@ -10,8 +10,9 @@ class Profile(models.Model):
         related_name='profile',
     )
 
-    first_name = models.CharField(max_length=128)
-    last_name = models.CharField(max_length=128)
+    first_name = models.CharField(max_length=127)
+    last_name = models.CharField(max_length=127)
+    headline = models.CharField(max_length=255, blank=True)
     bio = models.TextField()
 
     hide_name_from_recruiters = models.BooleanField(default=False)
