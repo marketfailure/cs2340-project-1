@@ -12,5 +12,5 @@ class RegisterForm(forms.Form):
 
 
 class LoginForm(forms.Form):
-    mail = forms.CharField(label="Mail", max_length=63)
+    mail = forms.CharField(label="Mail", max_length=255)
     password = forms.CharField(label="Password", widget=forms.PasswordInput(), max_length=63)

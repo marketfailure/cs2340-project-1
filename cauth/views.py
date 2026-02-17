@@ -37,7 +37,7 @@ def register(request: WSGIHandler):
         login(request, user)
 
         return HttpResponseRedirect('/profiles/edit/me/')
-    return render(request, 'register/index.html', {'form' : forms.RegisterForm})
+    return render(request, 'register/index.html', {'form' : forms.RegisterForm()})
 
 def loginpage(request: WSGIHandler):
     err_dict = {'action': 'login'}
@@ -46,12 +46,12 @@ def loginpage(request: WSGIHandler):
         if not fform.is_valid():
             return render(request, 'error.html', err_dict | {'error': 'Form is invalid'})
 
-        user = authenticate(request, email=fform['mail'].value(), password=fform['password'].value())
+        user = authenticate(request, username=fform['mail'].value(), password=fform['password'].value())
         if user is None:
-            return render(request, 'error.html', err_dict | {'error': 'Form is invalid'})
+            return render(request, 'error.html', err_dict | {'error': 'User is None'})
         login(request, user)
         return HttpResponseRedirect(SUCCESS_URL)
-    return render(request, 'login/index.html', {'form': forms.LoginForm})
+    return render(request, 'login/index.html', {'form': forms.LoginForm()})
 
 @decorators.login_required
 def logoutpage(request: WSGIHandler):
