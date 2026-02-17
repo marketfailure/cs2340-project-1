@@ -18,6 +18,7 @@ def job_list(request):
         remote_type = form.cleaned_data.get('remote_type') or ''
         visa = form.cleaned_data.get('visa_sponsorship')
         salary_min = form.cleaned_data.get('salary_min')
+        salary_max = form.cleaned_data.get('salary_max')
 
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(company_name__icontains=q))
@@ -33,6 +34,9 @@ def job_list(request):
 
         if salary_min is not None:
             qs = qs.filter(Q(salary_max__gte=salary_min) | Q(salary_max__isnull=True))
+
+        if salary_max is not None:
+            qs = qs.filter(Q(salary_max__gte=salary_max) | Q(salary_max__isnull=True))
 
         qs = qs.distinct()
 

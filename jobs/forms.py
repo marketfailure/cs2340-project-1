@@ -76,6 +76,8 @@ class JobSearchForm(forms.Form):
         choices=[("", "Any"), ("1", "Yes"), ("0", "No")],
     )
     salary_min = forms.IntegerField(label="Min salary", required=False, min_value=0)
+    salary_max = forms.IntegerField(label="Max salary", required=False, min_value=0)
+
 
     # distance filtering (optional)
     lat = forms.FloatField(required=False)
