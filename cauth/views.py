@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.core.handlers.wsgi import WSGIHandler
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 import cauth.forms as forms
 
@@ -25,7 +26,16 @@ def register(request: WSGIHandler):
             return render(request, 'error.html', err_dict | {'error': 'Username exists'})
 
         user = User.objects.create_user(username=mail, email=mail, password=password)
+
+        role = fform.cleaned_data["role"]
+        if role == "RECRUITER":
+            g, _ = Group.objects.get_or_create(name="recruiters")
+            user.groups.add(g)
+        else:
+            g, _ = Group.objects.get_or_create(name="job_seekers")
+            user.groups.add(g)
         login(request, user)
+
         return HttpResponseRedirect('/profiles/edit/me/')
     return render(request, 'register/index.html', {'form' : forms.RegisterForm})
 
