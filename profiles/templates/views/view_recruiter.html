@@ -34,6 +34,15 @@
 
           <div class="text-secondary mb-3">@{{ puser.username }}</div>
 
+          {% if not viewer_is_owner and puser.email %}
+            <div class="mt-2 mb-3">
+              <a class="btn btn-outline-info btn-sm"
+                 href="mailto:{{ puser.email }}">
+                Contact Recruiter via Email
+              </a>
+            </div>
+          {% endif %}
+
           {% if puser.profile.headline %}
             <div class="text-secondary mb-2">{{ puser.profile.headline }}</div>
           {% endif %}
