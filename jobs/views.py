@@ -228,7 +228,7 @@ def recruiter_pipeline(request, job_id: int):
     apps = (
         Application.objects
         .filter(job=job)
-        .select_related('applicant')
+        .select_related('applicant', 'applicant__profile')
         .order_by('-updated_at')
     )
 
@@ -236,8 +236,37 @@ def recruiter_pipeline(request, job_id: int):
     for a in apps:
         buckets[a.status].append(a)
 
-    return render(request, 'jobs/pipeline.html', {'job': job, 'buckets': buckets})
+    applicant_markers = []
+    for a in apps:
+        profile = getattr(a.applicant, 'profile', None)
+        if not profile:
+            continue
+        if profile.location_lat is None or profile.location_lng is None:
+            continue
 
+        if profile.hide_name_from_recruiters:
+            applicant_name = a.applicant.username
+        elif profile.full_name:
+            applicant_name = profile.full_name
+        else:
+            applicant_name = a.applicant.username
+
+        applicant_markers.append({
+            'application_id': a.id,
+            'name': applicant_name,
+            'username': a.applicant.username,
+            'status': a.status,
+            'location_text': profile.location_text or '',
+            'lat': profile.location_lat,
+            'lng': profile.location_lng,
+            'profile_url': f'/profiles/{a.applicant.username}/',
+        })
+
+    return render(request, 'jobs/pipeline.html', {
+        'job': job,
+        'buckets': buckets,
+        'applicant_markers': applicant_markers,
+    })
 
 @login_required
 @recruiter_only

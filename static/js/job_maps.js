@@ -25,10 +25,42 @@
     return parts.join("");
   }
 
+  function makeApplicantPopupText(marker) {
+    if (!marker) return "";
+    const parts = [];
+    if (marker.title) {
+      parts.push(`<div class="fw-bold">${marker.title}</div>`);
+    }
+    if (marker.subtitle) {
+      parts.push(`<div>${marker.subtitle}</div>`);
+    }
+    if (marker.url) {
+      parts.push(`<div class="mt-1"><a href="${marker.url}">Open profile</a></div>`);
+    }
+    return parts.join("");
+  }
+
   function ensureMap(elId) {
     const el = document.getElementById(elId);
     if (!el) return null;
     return el;
+  }
+
+  function geolocationErrorMessage(err) {
+    if (!err) {
+      return "Could not get your current location.";
+    }
+
+    switch (err.code) {
+      case 1:
+        return "Location permission was denied by your browser.";
+      case 2:
+        return "Your location is currently unavailable.";
+      case 3:
+        return "Getting your location timed out.";
+      default:
+        return "Could not get your current location.";
+    }
   }
 
   window.JobMaps = {
@@ -43,7 +75,7 @@
       let lat = latInput ? parseFloatOrNull(latInput.value) : parseFloatOrNull(opts.lat);
       let lng = lngInput ? parseFloatOrNull(lngInput.value) : parseFloatOrNull(opts.lng);
 
-      const defaultCenter = [33.7756, -84.3963];
+      const defaultCenter = opts.defaultCenter || [33.7756, -84.3963];
       const initialZoom = (lat !== null && lng !== null) ? 13 : (opts.initialZoom || 11);
 
       const map = L.map(mapEl).setView(
@@ -81,6 +113,8 @@
 
         if (labelInput && labelInput.value) {
           marker.bindPopup(labelInput.value);
+        } else if (!labelInput) {
+          marker.bindPopup("Pinned location");
         }
 
         map.panTo([newLat, newLng]);
@@ -190,7 +224,7 @@
         attribution: "&copy; OpenStreetMap contributors",
       }).addTo(map);
 
-      let resultBounds = [];
+      const resultBounds = [];
       const markers = opts.markers || [];
       markers.forEach(function (m) {
         if (m.lat === null || m.lat === undefined || m.lng === null || m.lng === undefined) {
@@ -287,6 +321,11 @@
             return;
           }
 
+          if (!window.isSecureContext) {
+            setStatus("Location requires HTTPS or localhost.");
+            return;
+          }
+
           setStatus("Getting your location...");
 
           navigator.geolocation.getCurrentPosition(
@@ -296,8 +335,14 @@
               setSearchCenter(lat, lng, true);
               setStatus("Using your current location.");
             },
-            function () {
-              setStatus("Could not get your current location.");
+            function (err) {
+              setStatus(geolocationErrorMessage(err));
+              if (err) {
+                console.error("Geolocation error:", {
+                  code: err.code,
+                  message: err.message,
+                });
+              }
             },
             {
               enableHighAccuracy: true,
@@ -310,7 +355,7 @@
 
       updateOverlays(true);
 
-      if (!latInput.value || !lngInput.value) {
+      if ((!latInput || !latInput.value) || (!lngInput || !lngInput.value)) {
         if (resultBounds.length > 0) {
           map.fitBounds(resultBounds, { padding: [30, 30] });
         }
@@ -324,6 +369,53 @@
         map: map,
         setSearchCenter: setSearchCenter,
       };
+    },
+
+    initApplicantClusterMap: function (opts) {
+      const mapEl = ensureMap(opts.mapId);
+      if (!mapEl) return null;
+
+      const map = L.map(mapEl).setView(opts.center || [33.7756, -84.3963], opts.zoom || 10);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      const bounds = [];
+      const markers = opts.markers || [];
+
+      if (typeof L.markerClusterGroup !== "function") {
+        console.error("Leaflet.markercluster is not loaded.");
+        return map;
+      }
+
+      const clusterGroup = L.markerClusterGroup();
+
+      markers.forEach(function (m) {
+        if (m.lat === null || m.lat === undefined || m.lng === null || m.lng === undefined) {
+          return;
+        }
+
+        const marker = L.marker([m.lat, m.lng]);
+        const popup = makeApplicantPopupText(m);
+        if (popup) marker.bindPopup(popup);
+
+        clusterGroup.addLayer(marker);
+        bounds.push([m.lat, m.lng]);
+      });
+
+      map.addLayer(clusterGroup);
+
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }
+
+      setTimeout(function () {
+        map.invalidateSize();
+      }, 0);
+
+      return map;
     },
   };
 })();
