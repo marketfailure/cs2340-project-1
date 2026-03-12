@@ -1,0 +1,13 @@
+<div class="card bg-dark text-white mb-3">
+  <div class="card-body">
+    {% if title %}
+      <h5 class="mb-3">{{ title }}</h5>
+    {% endif %}
+
+    {% if help_text %}
+      <div class="text-secondary mb-2">{{ help_text }}</div>
+    {% endif %}
+
+    <div id="{{ map_id }}" style="height: {{ height|default:'360px' }}; border-radius: 0.5rem;"></div>
+  </div>
+</div>
