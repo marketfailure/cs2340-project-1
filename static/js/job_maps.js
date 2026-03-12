@@ -43,7 +43,7 @@
       let lat = latInput ? parseFloatOrNull(latInput.value) : parseFloatOrNull(opts.lat);
       let lng = lngInput ? parseFloatOrNull(lngInput.value) : parseFloatOrNull(opts.lng);
 
-      const defaultCenter = [33.7756, -84.3963]; // Georgia Tech-ish fallback
+      const defaultCenter = [33.7756, -84.3963];
       const initialZoom = (lat !== null && lng !== null) ? 13 : (opts.initialZoom || 11);
 
       const map = L.map(mapEl).setView(
@@ -111,8 +111,7 @@
       if (labelInput) {
         labelInput.addEventListener("input", function () {
           if (marker) {
-            const val = labelInput.value || "Pinned location";
-            marker.bindPopup(val);
+            marker.bindPopup(labelInput.value || "Pinned location");
           }
         });
       }
@@ -128,7 +127,8 @@
       const mapEl = ensureMap(opts.mapId);
       if (!mapEl) return null;
 
-      const map = L.map(mapEl).setView(opts.center || [33.7756, -84.3963], opts.zoom || 11);
+      const defaultCenter = opts.center || [33.7756, -84.3963];
+      const map = L.map(mapEl).setView(defaultCenter, opts.zoom || 11);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -149,6 +149,12 @@
         bounds.push([m.lat, m.lng]);
       });
 
+      if (opts.searchCenter) {
+        const centerMarker = L.marker(opts.searchCenter).addTo(map);
+        centerMarker.bindPopup("Search center");
+        bounds.push(opts.searchCenter);
+      }
+
       if (opts.radiusCenter && opts.radiusMiles) {
         L.circle(opts.radiusCenter, {
           radius: milesToMeters(opts.radiusMiles),
@@ -165,6 +171,159 @@
       }, 0);
 
       return map;
+    },
+
+    initSearchRadiusMap: function (opts) {
+      const mapEl = ensureMap(opts.mapId);
+      if (!mapEl) return null;
+
+      const latInput = document.getElementById(opts.latInputId);
+      const lngInput = document.getElementById(opts.lngInputId);
+      const radiusInput = document.getElementById(opts.radiusInputId);
+      const geolocateBtn = opts.geolocateBtnId ? document.getElementById(opts.geolocateBtnId) : null;
+      const statusEl = opts.statusId ? document.getElementById(opts.statusId) : null;
+
+      const map = L.map(mapEl).setView(opts.defaultCenter || [33.7756, -84.3963], opts.zoom || 11);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      let resultBounds = [];
+      const markers = opts.markers || [];
+      markers.forEach(function (m) {
+        if (m.lat === null || m.lat === undefined || m.lng === null || m.lng === undefined) {
+          return;
+        }
+
+        const marker = L.marker([m.lat, m.lng]).addTo(map);
+        const popup = makePopupText(m);
+        if (popup) marker.bindPopup(popup);
+        resultBounds.push([m.lat, m.lng]);
+      });
+
+      let centerMarker = null;
+      let radiusCircle = null;
+
+      function setStatus(msg) {
+        if (statusEl) statusEl.textContent = msg || "";
+      }
+
+      function readRadiusMiles() {
+        return radiusInput ? parseFloatOrNull(radiusInput.value) : null;
+      }
+
+      function updateOverlays(fitMap) {
+        const lat = parseFloatOrNull(latInput ? latInput.value : null);
+        const lng = parseFloatOrNull(lngInput ? lngInput.value : null);
+        const radiusMiles = readRadiusMiles();
+
+        if (centerMarker) {
+          map.removeLayer(centerMarker);
+          centerMarker = null;
+        }
+        if (radiusCircle) {
+          map.removeLayer(radiusCircle);
+          radiusCircle = null;
+        }
+
+        const bounds = resultBounds.slice();
+
+        if (lat !== null && lng !== null) {
+          centerMarker = L.marker([lat, lng]).addTo(map);
+          centerMarker.bindPopup("Search center");
+          bounds.push([lat, lng]);
+
+          if (radiusMiles !== null && radiusMiles > 0) {
+            radiusCircle = L.circle([lat, lng], {
+              radius: milesToMeters(radiusMiles),
+            }).addTo(map);
+            bounds.push([lat, lng]);
+          }
+        }
+
+        if (fitMap && bounds.length > 0) {
+          map.fitBounds(bounds, { padding: [30, 30] });
+        }
+      }
+
+      function setSearchCenter(lat, lng, fitMap) {
+        if (latInput) latInput.value = lat.toFixed(6);
+        if (lngInput) lngInput.value = lng.toFixed(6);
+        updateOverlays(fitMap);
+      }
+
+      map.on("click", function (e) {
+        setSearchCenter(e.latlng.lat, e.latlng.lng, false);
+        setStatus("Search center updated from map.");
+      });
+
+      if (radiusInput) {
+        radiusInput.addEventListener("input", function () {
+          updateOverlays(false);
+        });
+        radiusInput.addEventListener("change", function () {
+          updateOverlays(false);
+        });
+      }
+
+      if (latInput) {
+        latInput.addEventListener("change", function () {
+          updateOverlays(false);
+        });
+      }
+
+      if (lngInput) {
+        lngInput.addEventListener("change", function () {
+          updateOverlays(false);
+        });
+      }
+
+      if (geolocateBtn) {
+        geolocateBtn.addEventListener("click", function () {
+          if (!navigator.geolocation) {
+            setStatus("Geolocation is not supported in this browser.");
+            return;
+          }
+
+          setStatus("Getting your location...");
+
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              setSearchCenter(lat, lng, true);
+              setStatus("Using your current location.");
+            },
+            function () {
+              setStatus("Could not get your current location.");
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 60000,
+            }
+          );
+        });
+      }
+
+      updateOverlays(true);
+
+      if (!latInput.value || !lngInput.value) {
+        if (resultBounds.length > 0) {
+          map.fitBounds(resultBounds, { padding: [30, 30] });
+        }
+      }
+
+      setTimeout(function () {
+        map.invalidateSize();
+      }, 0);
+
+      return {
+        map: map,
+        setSearchCenter: setSearchCenter,
+      };
     },
   };
 })();

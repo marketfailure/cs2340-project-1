@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% load bootstrap %}
 
-<!-- Partially edited with ChatGPT-->
-
 {% block extra_head %}
 <link
   rel="stylesheet"
@@ -58,15 +56,38 @@
     <div class="card-body">
       <h3 class="mb-3">Job Search</h3>
       <form method="get">
-        {{ form|bootstrap }}
-        <button class="btn btn-primary" type="submit">Search</button>
+        {{ form.q|bootstrap }}
+        {{ form.skill|bootstrap }}
+        {{ form.remote_type|bootstrap }}
+        {{ form.visa_sponsorship|bootstrap }}
+        {{ form.salary_min|bootstrap }}
+        {{ form.salary_max|bootstrap }}
+
+        <div class="row">
+          <div class="col-md-4">
+            {{ form.lat|bootstrap }}
+          </div>
+          <div class="col-md-4">
+            {{ form.lng|bootstrap }}
+          </div>
+          <div class="col-md-4">
+            {{ form.radius_miles|bootstrap }}
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          <button class="btn btn-outline-light" type="button" id="use-current-location-btn">
+            Use My Current Location
+          </button>
+          <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+
+        <div id="location-status" class="text-secondary mt-2"></div>
       </form>
     </div>
   </div>
 
-  {% if job_markers %}
-    {% include "partials/map_card.html" with map_id="jobs-results-map" title="Job Locations" help_text="Interactive map of all currently listed search results with saved office coordinates." height="420px" %}
-  {% endif %}
+  {% include "partials/map_card.html" with map_id="jobs-results-map" title="Job Map" help_text="Click the map to choose a search center, or use your current location. Set a radius in miles to filter nearby jobs." height="460px" %}
 
   {% for j in jobs %}
   <div class="card bg-dark text-white mb-3">
@@ -107,32 +128,65 @@
 ></script>
 <script src="/static/js/job_maps.js"></script>
 
-{% if job_markers %}
-  {{ job_markers|json_script:"job-markers-data" }}
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const rawMarkers = JSON.parse(
-        document.getElementById("job-markers-data").textContent
-      );
+<!-- Added by ChatGPT -->
+{{ job_markers|json_script:"job-markers-data" }}
+{{ search_lat|default_if_none:""|json_script:"search-lat-data" }}
+{{ search_lng|default_if_none:""|json_script:"search-lng-data" }}
+{{ search_radius|default_if_none:""|json_script:"search-radius-data" }}
 
-      JobMaps.initMarkersMap({
-        mapId: "jobs-results-map",
-        markers: rawMarkers.map(function (m) {
-          const subtitleParts = [];
-          if (m.company_name) subtitleParts.push(m.company_name);
-          if (m.location_text) subtitleParts.push(m.location_text);
-          if (m.remote_type) subtitleParts.push(m.remote_type);
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const rawMarkers = JSON.parse(
+      document.getElementById("job-markers-data").textContent
+    );
 
-          return {
-            lat: m.lat,
-            lng: m.lng,
-            title: m.title,
-            subtitle: subtitleParts.join(" • "),
-            url: "/jobs/" + m.id + "/"
-          };
-        })
-      });
+    const searchLatRaw = JSON.parse(
+      document.getElementById("search-lat-data").textContent
+    );
+    const searchLngRaw = JSON.parse(
+      document.getElementById("search-lng-data").textContent
+    );
+    const searchRadiusRaw = JSON.parse(
+      document.getElementById("search-radius-data").textContent
+    );
+
+    const searchLat = searchLatRaw === "" ? null : searchLatRaw;
+    const searchLng = searchLngRaw === "" ? null : searchLngRaw;
+    const searchRadius = searchRadiusRaw === "" ? null : searchRadiusRaw;
+
+    JobMaps.initSearchRadiusMap({
+      mapId: "jobs-results-map",
+      latInputId: "id_lat",
+      lngInputId: "id_lng",
+      radiusInputId: "id_radius_miles",
+      geolocateBtnId: "use-current-location-btn",
+      statusId: "location-status",
+      markers: rawMarkers.map(function (m) {
+        const subtitleParts = [];
+        if (m.company_name) subtitleParts.push(m.company_name);
+        if (m.location_text) subtitleParts.push(m.location_text);
+        if (m.remote_type) subtitleParts.push(m.remote_type);
+
+        return {
+          lat: m.lat,
+          lng: m.lng,
+          title: m.title,
+          subtitle: subtitleParts.join(" • "),
+          url: "/jobs/" + m.id + "/"
+        };
+      }),
+      defaultCenter: [33.7756, -84.3963],
+      zoom: 11
     });
-  </script>
-{% endif %}
+
+    if (searchLat !== null && searchLng !== null) {
+      document.getElementById("id_lat").value = Number(searchLat).toFixed(6);
+      document.getElementById("id_lng").value = Number(searchLng).toFixed(6);
+    }
+
+    if (searchRadius !== null) {
+      document.getElementById("id_radius_miles").value = searchRadius;
+    }
+  });
+</script>
 {% endblock %}

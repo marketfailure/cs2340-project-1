@@ -12,6 +12,11 @@ def job_list(request):
     form = JobSearchForm(request.GET or None)
 
     qs = JobPost.objects.filter(is_active=True).select_related('recruiter').prefetch_related('skills')
+
+    search_lat = None
+    search_lng = None
+    search_radius = None
+
     if form.is_valid():
         q = form.cleaned_data.get('q') or ''
         skill = form.cleaned_data.get('skill') or ''
@@ -47,6 +52,11 @@ def job_list(request):
         lat = form.cleaned_data.get('lat')
         lng = form.cleaned_data.get('lng')
         radius = form.cleaned_data.get('radius_miles')
+
+        search_lat = lat
+        search_lng = lng
+        search_radius = radius
+
         if lat is not None and lng is not None and radius is not None:
             import math
             deg_lat = radius / 69.0
@@ -64,7 +74,7 @@ def job_list(request):
 
     qs = qs.order_by('-created_at')
 
-    # Eidted with ChatGPT
+    # Edited with ChatGPT (DB search)
     recommended_jobs = []
     if request.user.is_authenticated and not is_recruiter(request.user):
         user_skills = list(request.user.profile.skills.values_list('name', flat=True))
@@ -105,8 +115,10 @@ def job_list(request):
         'jobs': qs,
         'recommended_jobs': recommended_jobs,
         'job_markers': job_markers,
+        'search_lat': search_lat,
+        'search_lng': search_lng,
+        'search_radius': search_radius,
     })
-
 
 def job_detail(request, job_id: int):
     job = get_object_or_404(
