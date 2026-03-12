@@ -189,3 +189,7 @@ def link_delete(request, link_id: int):
     profile = request.user.profile
     AboutLink.objects.filter(id=link_id, profile=profile).delete()
     return redirect('links_edit')
+
+@login_required
+def me(request):
+    return redirect(f'/profiles/{request.user.username}')
