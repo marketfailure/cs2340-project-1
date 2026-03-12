@@ -2,7 +2,7 @@
 {% block navbar %}{% include "userbar.html" %}{% endblock %}
 {% block title %}Pipeline{% endblock %}
 
-<!--Written by ChatGPT till EOF-->
+<!-- Written by ChatGPT till EOF -->
 
 {% block extra_head %}
 <link
@@ -26,11 +26,65 @@
   <div class="card bg-dark text-white mb-3">
     <div class="card-body">
       <h3 class="mb-1">Pipeline — {{ job.title }}</h3>
-      <a class="btn btn-secondary mt-2" href="{% url 'recruiter_job_edit' job.id %}">Back to Job</a>
+      <a class="btn btn-secondary mt-2" href="{% url 'recruiter_job_edit' job.id %}">
+        Back to Job
+      </a>
     </div>
   </div>
 
-  {% include "partials/map_card.html" with map_id="pipeline-map" title="Applicant Location Clusters" help_text="Applicants with saved profile coordinates are grouped into interactive map clusters." height="420px" %}
+  {% if recommended_candidates %}
+    <div class="card bg-dark text-white mb-3">
+      <div class="card-body">
+        <h4 class="mb-3">Recommended Candidates</h4>
+
+        {% for u in recommended_candidates %}
+          <div class="{% if not forloop.last %}mb-3 pb-3 border-bottom border-secondary{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-bold">
+                  {% if u.profile.hide_name_from_recruiters %}
+                    {{ u.username }}
+                  {% elif u.profile.full_name %}
+                    {{ u.profile.full_name }}
+                  {% else %}
+                    {{ u.username }}
+                  {% endif %}
+                </div>
+
+                <div class="text-secondary">
+                  @{{ u.username }} • Matching skills: {{ u.match_count }}
+                </div>
+
+                {% if u.profile.headline %}
+                  <div class="text-secondary">{{ u.profile.headline }}</div>
+                {% endif %}
+
+                {% if not u.profile.hide_skills_from_recruiters %}
+                  <div class="mt-2">
+                    {% for s in u.profile.skills.all %}
+                      <span class="badge bg-secondary">{{ s.name }}</span>
+                    {% empty %}
+                      <span class="text-secondary">No visible skills.</span>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="text-secondary mt-2">Skills are hidden.</div>
+                {% endif %}
+              </div>
+
+              <div>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'profile_view' u.username %}">
+                  View Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% include "partials/map_card.html" with map_id="pipeline-map" title="Applicant Location Clusters" help_text="" height="420px" %}
 
   <div class="row g-3">
     {% for status, items in buckets.items %}
@@ -46,7 +100,7 @@
                 <form method="post" action="{% url 'recruiter_set_status' a.id %}">
                   {% csrf_token %}
                   <select name="status" class="form-select form-select-sm mt-2">
-                    {% for k,v in a.Status.choices %}
+                    {% for k, v in a.Status.choices %}
                       <option value="{{ k }}" {% if a.status == k %}selected{% endif %}>{{ v }}</option>
                     {% endfor %}
                   </select>
@@ -56,7 +110,6 @@
             {% empty %}
               <div class="text-secondary">No applicants.</div>
             {% endfor %}
-
           </div>
         </div>
       </div>

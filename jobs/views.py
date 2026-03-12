@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth import get_user_model
+from profiles.models import Profile
 
 from .utils import recruiter_only, job_seeker_only, is_recruiter
 from .forms import JobPostForm, JobSearchForm, ApplicationForm, ApplicationStatusForm
@@ -223,7 +225,11 @@ def recruiter_job_edit(request, job_id: int):
 @login_required
 @recruiter_only
 def recruiter_pipeline(request, job_id: int):
-    job = get_object_or_404(JobPost, id=job_id, recruiter=request.user)
+    job = get_object_or_404(
+        JobPost.objects.prefetch_related('skills'),
+        id=job_id,
+        recruiter=request.user,
+    )
 
     apps = (
         Application.objects
@@ -262,11 +268,46 @@ def recruiter_pipeline(request, job_id: int):
             'profile_url': f'/profiles/{a.applicant.username}/',
         })
 
+    job_skill_names = list(job.skills.values_list('name', flat=True))
+    applied_user_ids = list(apps.values_list('applicant_id', flat=True))
+
+    recommended_candidates = []
+    if job_skill_names:
+        User = get_user_model()
+
+        # DB fetch written by ChatGPT
+        recommended_candidates = (
+            User.objects
+            .filter(profile__skills__name__in=job_skill_names)
+            .exclude(id__in=applied_user_ids)
+            .exclude(id=request.user.id)
+            .exclude(groups__name='recruiters')
+            .select_related('profile')
+            .prefetch_related(
+                'profile__skills',
+                'profile__education',
+                'profile__work_experience',
+                'profile__links',
+            )
+            .annotate(
+                match_count=Count(
+                    'profile__skills',
+                    filter=Q(profile__skills__name__in=job_skill_names),
+                    distinct=True,
+                )
+            )
+            .filter(match_count__gt=0)
+            .distinct()
+            .order_by('-match_count', 'username')[:8]
+        )
+
     return render(request, 'jobs/pipeline.html', {
         'job': job,
         'buckets': buckets,
         'applicant_markers': applicant_markers,
+        'recommended_candidates': recommended_candidates,
     })
+
 
 @login_required
 @recruiter_only
