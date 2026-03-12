@@ -24,6 +24,10 @@ class Profile(models.Model):
 
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
 
+    location_text = models.CharField(max_length=200, blank=True)
+    location_lat = models.FloatField(blank=True, null=True)
+    location_lng = models.FloatField(blank=True, null=True)
+
     @property
     def full_name(self) -> str:
         return f'{self.first_name} {self.last_name}'.strip()

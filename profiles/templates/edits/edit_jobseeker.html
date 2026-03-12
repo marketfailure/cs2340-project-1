@@ -7,6 +7,15 @@
 
 {% block title %}Edit Profile{% endblock %}
 
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4 mb-5">
     <div class="row justify-content-center">
@@ -23,6 +32,22 @@
                         {{ form.headline|bootstrap }}
                         {{ form.bio|bootstrap }}
                         {{ form.avatar|bootstrap }}
+
+                        <hr class="border-secondary my-4">
+
+                        <h5 class="mb-3">Location</h5>
+                        {{ form.location_text|bootstrap }}
+                        {{ form.location_lat|bootstrap }}
+                        {{ form.location_lng|bootstrap }}
+
+                        <div class="card bg-secondary-subtle mb-3">
+                          <div class="card-body">
+                            <div class="text-dark mb-2">
+                              Click on the map to pin your location, or drag the pin.
+                            </div>
+                            <div id="profile-location-map" style="height: 360px; border-radius: 0.5rem;"></div>
+                          </div>
+                        </div>
 
                         <hr class="border-secondary my-4">
 
@@ -85,4 +110,25 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+<script src="/static/js/job_maps.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    JobMaps.initSinglePinMap({
+      mapId: "profile-location-map",
+      latInputId: "id_location_lat",
+      lngInputId: "id_location_lng",
+      labelInputId: "id_location_text",
+      editable: true,
+      initialZoom: 11
+    });
+  });
+</script>
 {% endblock %}
