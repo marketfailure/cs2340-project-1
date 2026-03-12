@@ -64,6 +64,7 @@ def job_list(request):
 
     qs = qs.order_by('-created_at')
 
+    # Eidted with ChatGPT
     recommended_jobs = []
     if request.user.is_authenticated and not is_recruiter(request.user):
         user_skills = list(request.user.profile.skills.values_list('name', flat=True))
@@ -85,10 +86,25 @@ def job_list(request):
                 .order_by('-match_count', '-created_at')[:5]
             )
 
+    job_markers = [
+        {
+            'id': j.id,
+            'title': j.title,
+            'company_name': j.company_name or '',
+            'location_text': j.location_text or '',
+            'remote_type': j.remote_type or '',
+            'lat': j.location_lat,
+            'lng': j.location_lng,
+        }
+        for j in qs
+        if j.location_lat is not None and j.location_lng is not None
+    ]
+
     return render(request, 'jobs/list.html', {
         'form': form,
         'jobs': qs,
         'recommended_jobs': recommended_jobs,
+        'job_markers': job_markers,
     })
 
 
