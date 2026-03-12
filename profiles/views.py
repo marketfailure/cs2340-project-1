@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
