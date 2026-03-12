@@ -2,12 +2,20 @@
 {% block navbar %}{% include "userbar.html" %}{% endblock %}
 {% block title %}Job{% endblock %}
 
+<!--Written by ChatGPT $$-EOF-->
+
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+{% endblock %}
+
 {% block content %}
-
-<!-- Written by ChatGPT $$ - EOF -->
-
 <div class="container py-4 mb-5">
-  <div class="card bg-dark text-white">
+  <div class="card bg-dark text-white mb-3">
     <div class="card-body">
       <h3 class="mb-1">{{ job.title }}</h3>
       <div class="text-secondary mb-3">
@@ -32,5 +40,31 @@
       </div>
     </div>
   </div>
+
+  {% if job.location_lat is not None and job.location_lng is not None %}
+    {% include "partials/map_card.html" with map_id="job-detail-map" title="Office Location" help_text=job.location_text height="320px" %}
+  {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if job.location_lat is not None and job.location_lng is not None %}
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+<script src="/static/js/job_maps.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    JobMaps.initSinglePinMap({
+      mapId: "job-detail-map",
+      lat: "{{ job.location_lat|escapejs }}",
+      lng: "{{ job.location_lng|escapejs }}",
+      editable: false,
+      initialZoom: 13
+    });
+  });
+</script>
+{% endif %}
 {% endblock %}
