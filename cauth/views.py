@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 
 import cauth.forms as forms
 
-SUCCESS_URL = '/cauth/login/'
+SUCCESS_URL = '/profiles/view/me/'
 
 def register(request: WSGIHandler):
     err_dict = {'action': 'register'}
