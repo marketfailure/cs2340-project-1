@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -21,7 +21,11 @@ def job_list(request):
         salary_max = form.cleaned_data.get('salary_max')
 
         if q:
-            qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(company_name__icontains=q))
+            qs = qs.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q) |
+                Q(company_name__icontains=q)
+            )
 
         if skill:
             qs = qs.filter(skills__name__icontains=skill)
@@ -33,24 +37,20 @@ def job_list(request):
             qs = qs.filter(visa_sponsorship=(visa == '1'))
 
         if salary_min is not None:
-            qs = qs.filter(Q(salary_max__gte=salary_min) | Q(salary_max__isnull=True))
+            qs = qs.filter(Q(salary_min__lte=salary_min) | Q(salary_min__isnull=True))
 
         if salary_max is not None:
             qs = qs.filter(Q(salary_max__gte=salary_max) | Q(salary_max__isnull=True))
 
         qs = qs.distinct()
 
-        # Written by ChatGPT ($$ - 62)
-        # Distance filtering: MVP-simple
-        # (We only filter if lat/lng/radius provided AND job has lat/lng)
         lat = form.cleaned_data.get('lat')
         lng = form.cleaned_data.get('lng')
         radius = form.cleaned_data.get('radius_miles')
         if lat is not None and lng is not None and radius is not None:
-            # bounding-box prefilter (very rough but fast and easy)
-            # 1 degree lat ~ 69 miles; 1 degree lon ~ 69*cos(lat)
+            import math
             deg_lat = radius / 69.0
-            cos_lat = max(0.2, abs(__import__('math').cos(__import__('math').radians(lat))))
+            cos_lat = max(0.2, abs(math.cos(math.radians(lat))))
             deg_lng = radius / (69.0 * cos_lat)
 
             qs = qs.filter(
@@ -63,7 +63,33 @@ def job_list(request):
             )
 
     qs = qs.order_by('-created_at')
-    return render(request, 'jobs/list.html', {'form': form, 'jobs': qs})
+
+    recommended_jobs = []
+    if request.user.is_authenticated and not is_recruiter(request.user):
+        user_skills = list(request.user.profile.skills.values_list('name', flat=True))
+
+        if user_skills:
+            recommended_jobs = (
+                JobPost.objects
+                .filter(is_active=True)
+                .annotate(
+                    match_count=Count(
+                        'skills',
+                        filter=Q(skills__name__in=user_skills),
+                        distinct=True,
+                    )
+                )
+                .filter(match_count__gt=0)
+                .select_related('recruiter')
+                .prefetch_related('skills')
+                .order_by('-match_count', '-created_at')[:5]
+            )
+
+    return render(request, 'jobs/list.html', {
+        'form': form,
+        'jobs': qs,
+        'recommended_jobs': recommended_jobs,
+    })
 
 
 def job_detail(request, job_id: int):
@@ -71,7 +97,11 @@ def job_detail(request, job_id: int):
         JobPost.objects.select_related('recruiter').prefetch_related('skills'),
         id=job_id,
     )
-    if not job.is_active and not (request.user.is_authenticated and (is_recruiter(request.user) and job.recruiter_id == request.user.id)):
+    if not job.is_active and not (
+        request.user.is_authenticated
+        and is_recruiter(request.user)
+        and job.recruiter_id == request.user.id
+    ):
         raise Http404('Job not found')
 
     already_applied = False
