@@ -7,6 +7,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="{% static 'styles/bootstrap.min.css' %}">
+        {% block extra_head %}{% endblock %}
     </head>
     <body>
         {% block navbar %}
@@ -23,5 +24,6 @@
                 All rights reserved to Group 21?.
             </div>
         </footer>
+        {% block extra_js %}{% endblock %}
     </body>
 </html>
