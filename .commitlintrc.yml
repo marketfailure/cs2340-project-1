@@ -28,6 +28,7 @@ rules:
       - profile
       - assets
       - job
+      - home
   subject-empty:
     level: error
   type:
