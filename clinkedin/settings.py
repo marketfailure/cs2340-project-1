@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'cauth',
     'profiles',
     'jobs',
+    'home',
 ]
 
 MIDDLEWARE = [
